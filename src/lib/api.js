@@ -3,7 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
 class ApiService {
   // Método para requests que requieren autenticación
-  async request(endpoint, options = {}) {
+  request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     
     const config = {
@@ -24,7 +24,7 @@ class ApiService {
   }
 
   // Método para requests públicos (sin autenticación)
-  async publicRequest(endpoint, options = {}) {
+  publicRequest(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     
     const config = {
@@ -40,87 +40,84 @@ class ApiService {
   }
 
   // Método interno para hacer la request actual
-  async _makeRequest(url, config) {
+  _makeRequest(url, config) {
+    return fetch(url, config)
+      .then(response => {
+        if (!response.ok) {
+          return response.json()
+            .catch(() => ({}))
+            .then(errorData => {
+              // Manejo específico de errores HTTP
+              let errorMessage;
+              switch (response.status) {
+                case 400:
+                  errorMessage = errorData.message || 'Datos inválidos. Verifica la información ingresada.';
+                  break;
+                case 401:
+                  errorMessage = errorData.message || 'Email o contraseña incorrectos.';
+                  break;
+                case 403:
+                  errorMessage = errorData.message || 'Acceso denegado.';
+                  break;
+                case 404:
+                  errorMessage = 'Endpoint no encontrado. Verifica la URL del backend.';
+                  break;
+                case 500:
+                  errorMessage = 'Error interno del servidor. Contacta al administrador.';
+                  break;
+                default:
+                  errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+              }
+              throw new Error(errorMessage);
+            });
+        }
 
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        // Manejo específico de errores HTTP
-        let errorMessage;
-        switch (response.status) {
-          case 400:
-            errorMessage = errorData.message || 'Datos inválidos. Verifica la información ingresada.';
-            break;
-          case 401:
-            errorMessage = errorData.message || 'Email o contraseña incorrectos.';
-            break;
-          case 403:
-            errorMessage = errorData.message || 'Acceso denegado. Verifica tu backend y configuración CORS.';
-            break;
-          case 404:
-            errorMessage = 'Endpoint no encontrado. Verifica la URL del backend.';
-            break;
-          case 500:
-            errorMessage = 'Error interno del servidor. Contacta al administrador.';
-            break;
-          default:
-            errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+        // Verificar si la respuesta tiene contenido antes de hacer .json()
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          return response.json();
+        } else {
+          // Si no hay contenido JSON, verificar si hay texto
+          return response.text().then(text => text || { success: true });
+        }
+      })
+      .catch(error => {
+        // Si es un error de red (CORS, conexión rechazada, etc.)
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          throw new Error('No se pudo conectar al servidor. Verifica que el backend Spring Boot esté funcionando en el puerto 4002.');
         }
         
-        throw new Error(errorMessage);
-      }
-
-      // Verificar si la respuesta tiene contenido antes de hacer .json()
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json();
-      } else {
-        // Si no hay contenido JSON, verificar si hay texto
-        const text = await response.text();
-        return text || { success: true };
-      }
-    } catch (error) {
-      // Si es un error de red (CORS, conexión rechazada, etc.)
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('No se pudo conectar al servidor. Verifica que el backend Spring Boot esté funcionando en el puerto 4002.');
-      }
-      
-      console.error('API Request Error:', error);
-      throw error;
-    }
+        console.error('API Request Error:', error);
+        throw error;
+      });
   }
 
   // Método para login
-  async login(email, contrasena) {
-    const data = await this.request('/api/auth/login', {
+  login(email, contrasena) {
+    return this.request('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, contrasena }),
+    }).then(data => {
+      // Guardar token en localStorage si viene en la respuesta
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      return data;
     });
-    
-    // Guardar token en localStorage si viene en la respuesta
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-    }
-    
-    return data;
   }
 
   // Método para registro
-  async register(nombre, apellido, email, contrasena) {
-    const data = await this.request('/api/auth/registrar', {
+  register(nombre, apellido, email, contrasena) {
+    return this.request('/api/auth/registrar', {
       method: 'POST',
       body: JSON.stringify({ nombre, apellido, email, contrasena }),
+    }).then(data => {
+      // Guardar token en localStorage si viene en la respuesta
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      return data;
     });
-    
-    // Guardar token en localStorage si viene en la respuesta
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-    }
-    
-    return data;
   }
 
   // Método para logout (limpiar token)
@@ -134,29 +131,30 @@ class ApiService {
   }
 
   // Método para obtener información del usuario (si tu backend lo soporta)
-  async getCurrentUser() {
+  getCurrentUser() {
     const token = this.getStoredToken();
     if (!token) {
-      return null;
+      return Promise.resolve(null);
     }
 
-    try {
-      // Si tienes un endpoint para obtener info del usuario actual
-      const userData = await this.request('/api/auth/me', {
-        method: 'GET',
-      });
+    // Si tienes un endpoint para obtener info del usuario actual
+    return this.request('/api/auth/me', {
+      method: 'GET',
+    })
+    .then(userData => {
       return userData;
-    } catch {
+    })
+    .catch(() => {
       // Si el token es inválido, limpiarlo
       this.logout();
       return null;
-    }
+    });
   }
 
   // ========== MÉTODOS PARA PRODUCTOS ==========
   
   // Obtener todos los productos con filtros opcionales
-  async getProductos(filtros = {}) {
+  getProductos(filtros = {}) {
     const params = new URLSearchParams();
     
     // Usar los parámetros exactos que acepta tu backend
@@ -177,28 +175,28 @@ class ApiService {
     const endpoint = queryString ? `/api/productos?${queryString}` : '/api/productos';
     
     // Usar request público (sin autenticación)
-    return await this.publicRequest(endpoint, {
+    return this.publicRequest(endpoint, {
       method: 'GET',
     });
   }
 
   // Obtener un producto específico por ID
-  async getProducto(id) {
-    return await this.publicRequest(`/api/productos/${id}`, {
+  getProducto(id) {
+    return this.publicRequest(`/api/productos/${id}`, {
       method: 'GET',
     });
   }
 
   // Obtener todas las categorías (público)
-  async getCategorias() {
-    return await this.publicRequest('/api/categorias', {
+  getCategorias() {
+    return this.publicRequest('/api/categorias', {
       method: 'GET',
     });
   }
 
   // Obtener todas las marcas (público)
-  async getMarcas() {
-    return await this.publicRequest('/api/marcas', {
+  getMarcas() {
+    return this.publicRequest('/api/marcas', {
       method: 'GET',
     });
   }
@@ -206,15 +204,15 @@ class ApiService {
   // ========== MÉTODOS PARA CARRITO ==========
   
   // Obtener carrito del usuario
-  async getCarrito() {
-    return await this.request('/api/carrito', {
+  getCarrito() {
+    return this.request('/api/carrito', {
       method: 'GET',
     });
   }
 
   // Agregar producto al carrito
-  async agregarAlCarrito(idProducto, cantidad = 1) {
-    return await this.request('/api/carrito/items', {
+  agregarAlCarrito(idProducto, cantidad = 1) {
+    return this.request('/api/carrito/items', {
       method: 'POST',
       body: JSON.stringify({
         id_producto: idProducto,
@@ -224,8 +222,8 @@ class ApiService {
   }
 
   // Eliminar producto del carrito
-  async eliminarDelCarrito(idProducto) {
-    return await this.request(`/api/carrito/items/${idProducto}`, {
+  eliminarDelCarrito(idProducto) {
+    return this.request(`/api/carrito/items/${idProducto}`, {
       method: 'DELETE',
     });
   }
