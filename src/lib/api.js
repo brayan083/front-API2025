@@ -2,6 +2,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
 class ApiService {
+  // Método para requests que requieren autenticación
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     
@@ -18,6 +19,28 @@ class ApiService {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    return this._makeRequest(url, config);
+  }
+
+  // Método para requests públicos (sin autenticación)
+  async publicRequest(endpoint, options = {}) {
+    const url = `${API_BASE_URL}${endpoint}`;
+    
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
+
+    // NO añadir token para requests públicos
+    return this._makeRequest(url, config);
+  }
+
+  // Método interno para hacer la request actual
+  async _makeRequest(url, config) {
 
     try {
       const response = await fetch(url, config);
@@ -50,7 +73,15 @@ class ApiService {
         throw new Error(errorMessage);
       }
 
-      return await response.json();
+      // Verificar si la respuesta tiene contenido antes de hacer .json()
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      } else {
+        // Si no hay contenido JSON, verificar si hay texto
+        const text = await response.text();
+        return text || { success: true };
+      }
     } catch (error) {
       // Si es un error de red (CORS, conexión rechazada, etc.)
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -120,6 +151,83 @@ class ApiService {
       this.logout();
       return null;
     }
+  }
+
+  // ========== MÉTODOS PARA PRODUCTOS ==========
+  
+  // Obtener todos los productos con filtros opcionales
+  async getProductos(filtros = {}) {
+    const params = new URLSearchParams();
+    
+    // Usar los parámetros exactos que acepta tu backend
+    if (filtros.q) params.append('q', String(filtros.q));
+    if (filtros.categoria !== undefined && filtros.categoria !== null) {
+      params.append('categoria', String(filtros.categoria));
+    }
+    if (filtros.marca !== undefined && filtros.marca !== null) {
+      params.append('marca', String(filtros.marca));
+    }
+    if (filtros.min !== undefined) params.append('min', String(filtros.min));
+    if (filtros.max !== undefined) params.append('max', String(filtros.max));
+    if (filtros.page !== undefined) params.append('page', String(filtros.page));
+    if (filtros.size !== undefined) params.append('size', String(filtros.size));
+    if (filtros.sort) params.append('sort', String(filtros.sort));
+    
+    const queryString = params.toString();
+    const endpoint = queryString ? `/api/productos?${queryString}` : '/api/productos';
+    
+    // Usar request público (sin autenticación)
+    return await this.publicRequest(endpoint, {
+      method: 'GET',
+    });
+  }
+
+  // Obtener un producto específico por ID
+  async getProducto(id) {
+    return await this.publicRequest(`/api/productos/${id}`, {
+      method: 'GET',
+    });
+  }
+
+  // Obtener todas las categorías (público)
+  async getCategorias() {
+    return await this.publicRequest('/api/categorias', {
+      method: 'GET',
+    });
+  }
+
+  // Obtener todas las marcas (público)
+  async getMarcas() {
+    return await this.publicRequest('/api/marcas', {
+      method: 'GET',
+    });
+  }
+
+  // ========== MÉTODOS PARA CARRITO ==========
+  
+  // Obtener carrito del usuario
+  async getCarrito() {
+    return await this.request('/api/carrito', {
+      method: 'GET',
+    });
+  }
+
+  // Agregar producto al carrito
+  async agregarAlCarrito(idProducto, cantidad = 1) {
+    return await this.request('/api/carrito/items', {
+      method: 'POST',
+      body: JSON.stringify({
+        id_producto: idProducto,
+        cantidad: cantidad
+      }),
+    });
+  }
+
+  // Eliminar producto del carrito
+  async eliminarDelCarrito(idProducto) {
+    return await this.request(`/api/carrito/items/${idProducto}`, {
+      method: 'DELETE',
+    });
   }
 }
 

@@ -1,0 +1,10 @@
+<!-- Archivo placeholder para productos sin imagen -->
+<svg width="300" height="200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <rect width="300" height="200" fill="#f3f4f6"/>
+  <text x="150" y="90" font-family="Arial, sans-serif" font-size="14" fill="#9ca3af" text-anchor="middle">
+    Imagen no disponible
+  </text>
+  <text x="150" y="110" font-family="Arial, sans-serif" font-size="12" fill="#9ca3af" text-anchor="middle">
+    🎵 Instrumento Musical
+  </text>
+</svg>
