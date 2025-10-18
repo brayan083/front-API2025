@@ -32,6 +32,45 @@ export const ProductCatalog = ({ onAddToCart }) => {
       item.id === productoId || item.idProducto === productoId
     );
   };
+  
+  // Helper para normalizar/decodificar imágenes
+  // - acepta: data URLs (se devuelven tal cual), URLs absolutas/relativas, o base64 puro
+  // - detecta heurísticamente JPEG/PNG por prefijo base64 y construye data URL
+  const getImageSrc = (imagen) => {
+    if (!imagen) return '/placeholder-product.png';
+    if (typeof imagen !== 'string') return '/placeholder-product.png';
+
+    const trimmed = imagen.trim();
+
+    // Si ya es una data URL la devolvemos
+    if (trimmed.startsWith('data:')) return trimmed;
+
+    // Si es una URL absoluta o relativa
+    if (trimmed.startsWith('http') || trimmed.startsWith('/')) return trimmed;
+
+    // Heurística para detectar base64 "puro": solo caracteres base64 y longitud razonable
+    const base64Regex = /^[A-Za-z0-9+/=\s]+$/;
+    if (base64Regex.test(trimmed) && trimmed.length > 100) {
+      // Detectar tipo por prefijo base64 común
+      let mime = 'image/png';
+      if (trimmed.startsWith('/9j')) mime = 'image/jpeg'; // JPEG suele empezar con /9j
+      else if (trimmed.startsWith('iVBOR')) mime = 'image/png'; // PNG suele empezar con iVBOR
+
+      return `data:${mime};base64,${trimmed}`;
+    }
+
+    // Intentar decodificar URI (por si se envió encodeURIComponent de una data URL)
+    try {
+      const decoded = decodeURIComponent(trimmed);
+      if (decoded.startsWith('data:')) return decoded;
+    } catch {
+      console('no decodifique')
+      // ignore
+    }
+
+    // Fallback
+    return '/placeholder-product.png';
+  };
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
   const [marcas, setMarcas] = useState([]);
@@ -89,7 +128,8 @@ export const ProductCatalog = ({ onAddToCart }) => {
         apiService.getMarcas(),
         apiService.getProductos()
       ]);
-      
+      console.log('productosData:', productosData);
+
       setCategorias(categoriasData?.content || []);
       setMarcas(marcasData?.content || []);
       setProductos(productosData?.content || []);
@@ -214,7 +254,7 @@ export const ProductCatalog = ({ onAddToCart }) => {
           <div key={producto.id} className="product-card">
             <div className="product-image-container">
               <img 
-                src={producto.imagen || '/placeholder-product.png'} 
+                src={getImageSrc(producto.imagenBase64)} 
                 alt={producto.nombre}
                 className="product-image"
                 onError={(e) => { e.target.src = '/placeholder-product.png'; }}
