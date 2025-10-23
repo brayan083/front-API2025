@@ -128,7 +128,7 @@ export const ProductCatalog = ({ onAddToCart }) => {
         apiService.getMarcas(),
         apiService.getProductos()
       ]);
-      console.log('productosData:', productosData);
+      // console.log('productosData:', productosData);
 
       setCategorias(categoriasData?.content || []);
       setMarcas(marcasData?.content || []);

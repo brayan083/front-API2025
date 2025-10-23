@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 export const Header = ({ onCartClick = () => {}, cartItemCount = 0 }) => {
   const { user, signOut } = useAuth();
+  // console.log('User in Header:', user);
 
   const handleSignOut = async () => {
     await signOut();
@@ -17,7 +18,10 @@ export const Header = ({ onCartClick = () => {}, cartItemCount = 0 }) => {
           {/* Navegación siempre visible */}
           <Link to="/" className="nav-link">Inicio</Link>
           <Link to="/catalogo" className="nav-link">Catálogo</Link>
-          
+          {user?.isAdmin && (
+            <Link to="/admin" className="nav-link nav-admin">Admin</Link>
+          )}
+
           {user ? (
             <>
               <span className="user-email">{user.email}</span>

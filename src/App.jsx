@@ -1,25 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { Auth } from './components/Auth';
-import { Header } from './components/Header';
-import { Home } from './components/Home';
-import { ProductCatalog } from './components/ProductCatalog';
-import { ShoppingCart } from './components/ShoppingCart';
-import { apiService } from './lib/api';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import './App.css';
-
-
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { Auth } from "./components/Auth";
+import { Header } from "./components/Header";
+import { Home } from "./components/Home";
+import { Admin } from "./components/Admin";
+import { ProductCatalog } from "./components/ProductCatalog";
+import { ShoppingCart } from "./components/ShoppingCart";
+import { apiService } from "./lib/api";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import "./App.css";
 
 // Layout inteligente que cambia según autenticación
 function SmartLayout() {
   const { user } = useAuth();
-  
+
   // Si hay usuario logueado, usa AppLayout con carrito
   if (user) {
     return <AppLayout />;
   }
-  
+
   // Si no hay usuario, usa layout público sin carrito
   return (
     <div className="app">
@@ -53,7 +52,7 @@ function AppLayout() {
       setCartItemCount(total);
       setCarrito(items);
     } catch (error) {
-      console.error('❌ Error actualizando contador del carrito:', error);
+      console.error("❌ Error actualizando contador del carrito:", error);
       setCartItemCount(0);
       setCarrito([]);
     }
@@ -70,8 +69,8 @@ function AppLayout() {
       setCartUpdated((prev) => prev + 1);
       await updateCartCount(); // Actualizar carrito y contador
     } catch (error) {
-      console.error('❌ Error agregando al carrito:', error);
-      alert('Error al agregar al carrito. Inténtalo de nuevo.');
+      console.error("❌ Error agregando al carrito:", error);
+      alert("Error al agregar al carrito. Inténtalo de nuevo.");
     }
   };
 
@@ -83,11 +82,13 @@ function AppLayout() {
       />
       <main className="main-content">
         {/* Outlet renderizará el componente de la ruta hija (ProductCatalog) */}
-        <Outlet context={{ 
-          onAddToCart: handleAddToCart,
-          carrito: carrito,
-          updateCartCount: updateCartCount
-        }} />
+        <Outlet
+          context={{
+            onAddToCart: handleAddToCart,
+            carrito: carrito,
+            updateCartCount: updateCartCount,
+          }}
+        />
       </main>
       <ShoppingCart
         isOpen={isCartOpen}
@@ -105,7 +106,6 @@ function AppLayout() {
 //     return <ProductCatalog onAddToCart={onAddToCart} />;
 // }
 
-
 function AppContent() {
   const { loading, user } = useAuth();
 
@@ -119,17 +119,29 @@ function AppContent() {
       <Route element={<SmartLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/catalogo" element={<ProductCatalog />} />
+        {/* Ruta /admin solo para admins */}
+        <Route
+          path="/admin"
+          element={
+            user?.isAdmin ? (
+              <Suspense fallback={<div>Cargando admin...</div>}>
+                <Admin />
+              </Suspense>
+            ) : (
+              <Navigate to="/" />
+            )
+          }
+        />
       </Route>
 
       {/* Ruta de login */}
       <Route path="/login" element={user ? <Navigate to="/" /> : <Auth />} />
-      
+
       {/* Redirección por defecto */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
-
 
 function App() {
   return (

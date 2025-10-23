@@ -2,6 +2,91 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
 class ApiService {
+  // Obtener pedidos (admin)
+  async getPedidosAdmin() {
+    return this.request('/api/admin/pedidos', {
+      method: 'GET',
+    });
+  }
+  // Crear pedido
+  async crearPedido(idDireccionEnvio, idMetodoPago) {
+    return this.request('/api/pedidos', {
+      method: 'POST',
+      body: JSON.stringify({
+        id_direccion_envio: idDireccionEnvio,
+        id_metodo_pago: idMetodoPago
+      }),
+    });
+  }
+  // Crear producto (requiere autenticación y permisos de admin)
+  async createProduct(producto) {
+    const url = `${API_BASE_URL}/api/admin/productos`;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(producto),
+    };
+    // Agregar token si existe
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    try {
+      const response = await fetch(url, config);
+      if (response.status === 201) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+  }
+  // Actualizar producto (requiere autenticación y permisos de admin)
+  async updateProduct(id, producto) {
+    const url = `${API_BASE_URL}/api/admin/productos/${id}`;
+    const config = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(producto),
+    };
+    // Agregar token si existe
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    try {
+      const response = await fetch(url, config);
+      return response.status === 200;
+    } catch {
+      return false;
+    }
+  }
+  // Eliminar producto (requiere autenticación y permisos de admin)
+  async deleteProduct(id) {
+    const url = `${API_BASE_URL}/api/admin/productos/${id}`;
+    const config = {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    };
+    // Agregar token si existe
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    try {
+      const response = await fetch(url, config);
+      return response.status === 204;
+    } catch {
+      return false;
+    }
+  }
   // Método para requests que requieren autenticación
   request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -131,24 +216,23 @@ class ApiService {
   }
 
   // Método para obtener información del usuario (si tu backend lo soporta)
-  getCurrentUser() {
+  async getCurrentUser() {
     const token = this.getStoredToken();
     if (!token) {
       return Promise.resolve(null);
     }
 
     // Si tienes un endpoint para obtener info del usuario actual
-    return this.request('/api/auth/me', {
-      method: 'GET',
-    })
-    .then(userData => {
+    try {
+      const userData = await this.request('/api/auth/me', {
+        method: 'GET',
+      });
       return userData;
-    })
-    .catch(() => {
+    } catch {
       // Si el token es inválido, limpiarlo
       this.logout();
       return null;
-    });
+    }
   }
 
   // ========== MÉTODOS PARA PRODUCTOS ==========
@@ -225,6 +309,82 @@ class ApiService {
   eliminarDelCarrito(idProducto) {
     return this.request(`/api/carrito/items/${idProducto}`, {
       method: 'DELETE',
+    });
+  }
+
+  // Crear categoría (requiere autenticación y permisos de admin)
+  async createCategoria(nombre) {
+    const url = `${API_BASE_URL}/api/admin/categorias`;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ nombre }),
+    };
+    // Agregar token si existe
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    try {
+      const response = await fetch(url, config);
+      return response.status === 201;
+    } catch {
+      return false;
+    }
+  }
+
+  // Crear marca (requiere autenticación y permisos de admin)
+  async createMarca(nombre) {
+    const url = `${API_BASE_URL}/api/admin/marcas`;
+    const config = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ nombre }),
+    };
+    // Agregar token si existe
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    try {
+      const response = await fetch(url, config);
+      return response.status === 201;
+    } catch {
+      return false;
+    }
+  }
+
+  // Obtener métodos de pago del usuario
+  async getMetodosPago() {
+    return this.request('/api/usuarios/metodos-pago', {
+      method: 'GET',
+    });
+  }
+
+  // Agregar método de pago
+  async addMetodoPago(metodo) {
+    return this.request('/api/usuarios/metodos-pago', {
+      method: 'POST',
+      body: JSON.stringify(metodo),
+    });
+  }
+
+  // Obtener direcciones del usuario
+  async getDirecciones() {
+    return this.request('/api/usuarios/direcciones', {
+      method: 'GET',
+    });
+  }
+
+  // Agregar dirección
+  async addDireccion(direccion) {
+    return this.request('/api/usuarios/direcciones', {
+      method: 'POST',
+      body: JSON.stringify(direccion),
     });
   }
 }
