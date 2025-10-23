@@ -143,9 +143,16 @@ class ApiService {
         return this.publicRequest(endpoint, { method: 'GET' });
     }
     getProducto(id) { return this.publicRequest(`/api/productos/${id}`, { method: 'GET' }); }
-    getCategorias() { return this.publicRequest('/api/categorias', { method: 'GET' }); }
+    getCategoriaDetalle(id) {
+        if (!id) return Promise.reject(new Error("Se requiere el ID de la categoría."));
+        return this.publicRequest(`/api/categorias/${id}`, { method: 'GET' });
+    }
     getMarcas() { return this.publicRequest('/api/marcas', { method: 'GET' }); }
-
+    getProductoReviews(productoId) {
+        if (!productoId) return Promise.reject(new Error("Se requiere el ID del producto para obtener reseñas."));
+        // Es un endpoint público
+        return this.publicRequest(`/api/productos/${productoId}/reviews`, { method: 'GET' });
+    }
     // --- CARRITO (Autenticado) ---
     getCarrito() { return this.request('/api/carrito', { method: 'GET' }); }
     agregarAlCarrito(idProducto, cantidad = 1) { return this.request('/api/carrito/items', { method: 'POST', body: JSON.stringify({ id_producto: idProducto, cantidad: cantidad }) }); }

@@ -573,6 +573,133 @@
   color: #6b7280;
   margin: 0.25rem 0;
 }
+/* --- ESTILOS PARA RESEÑAS --- */
+.reviews-section-toggle {
+    margin-top: 1rem;
+    text-align: center; /* Centrar el botón */
+}
+
+.btn-toggle-reviews {
+    background-color: #e5e7eb; /* Gris claro */
+    color: #374151; /* Gris oscuro */
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.btn-toggle-reviews:hover:not(:disabled) {
+    background-color: #d1d5db; /* Gris medio */
+}
+
+.btn-toggle-reviews:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.reviews-list-container {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #e5e7eb; /* Separador */
+}
+
+.reviews-list-container h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #1e3a8a; /* Azul */
+    font-size: 1.1rem;
+}
+
+.reviews-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 250px; /* Limitar altura y permitir scroll */
+    overflow-y: auto;
+    padding-right: 0.5rem; /* Espacio para scrollbar */
+}
+
+.review-item {
+    background-color: #f9fafb; /* Fondo muy claro */
+    border: 1px solid #f3f4f6; /* Borde muy claro */
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.review-author {
+    font-weight: 600;
+    color: #374151; /* Gris oscuro */
+    font-size: 0.95rem;
+}
+
+.review-comment {
+    color: #4b5563; /* Gris medio */
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0.5rem 0;
+    white-space: pre-wrap; /* Respetar saltos de línea */
+}
+
+.review-date {
+    display: block; /* Poner en línea separada */
+    text-align: right; /* Alinear a la derecha */
+    font-size: 0.75rem;
+    color: #9ca3af; /* Gris claro */
+    margin-top: 0.5rem;
+}
+
+.no-reviews-message {
+    color: #6b7280; /* Gris */
+    font-style: italic;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 1rem 0;
+}
+
+/* Estilos para estrellas */
+.star-rating {
+    display: inline-block; /* Para que no ocupe toda la línea */
+}
+
+.star {
+    font-size: 1.1rem; /* Tamaño de las estrellas */
+    cursor: default; /* No son interactivas aquí */
+}
+
+.star.filled {
+    color: #f59e0b; /* Amarillo/naranja */
+}
+
+.star.empty {
+    color: #d1d5db; /* Gris claro */
+}
+
+/* Scrollbar sutil para la lista de reseñas */
+.reviews-list::-webkit-scrollbar {
+    width: 6px;
+}
+.reviews-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+.reviews-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+.reviews-list::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
 
 /* Estilos responsivos para el catálogo */
 @media (max-width: 768px) {
