@@ -116,6 +116,77 @@
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
+.order-history-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+.order-summary-item {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease;
+}
+
+.order-summary-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.order-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed #d1d5db;
+}
+
+.order-id {
+    font-weight: 600;
+    color: #1e3a8a;
+    font-size: 1.1rem;
+}
+
+.order-date {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.order-summary-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Columnas flexibles */
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    color: #4b5563;
+}
+
+.order-status,
+.order-items,
+.order-total {
+    display: inline-block; /* O flex si necesitas más control */
+}
+
+.order-total {
+    font-weight: 600;
+    color: #10b981; /* Verde para el total */
+    text-align: right; /* Alinear total a la derecha si es posible */
+}
+
+/* Ajuste responsivo para el cuerpo del resumen */
+@media (max-width: 600px) {
+    .order-summary-body {
+        grid-template-columns: 1fr; /* Una columna en móviles */
+        gap: 0.25rem;
+    }
+    .order-total {
+        text-align: left; /* Alinear a la izquierda en móvil */
+        margin-top: 0.5rem;
+    }
+}
+
 .add-form .btn-primary {
     /* Usar el estilo definido en App.css */
     margin-top: 1rem;
