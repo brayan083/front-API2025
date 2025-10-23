@@ -142,10 +142,10 @@ export const ShoppingCart = ({ isOpen, onClose, cartUpdated, onCartUpdate }) => 
 
             // 2. Validar que existan y tomar el primero de cada uno
             if (!direcciones || direcciones.length === 0) {
-                throw new Error("No tienes direcciones de envío registradas. Por favor, agrega una en tu perfil.");
+                throw new Error("No tienes direcciones de envío registradas. Por favor, agrega una desde la página 'Mi Perfil'.");
             }
             if (!metodosPago || metodosPago.length === 0) {
-                throw new Error("No tienes métodos de pago registrados. Por favor, agrega uno en tu perfil.");
+                throw new Error("\"No tienes métodos de pago registrados. Por favor, agrega uno desde la página 'Mi Perfil'.\"");
             }
 
             const primeraDireccionId = direcciones[0].id;
