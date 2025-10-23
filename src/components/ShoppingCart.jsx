@@ -328,6 +328,7 @@ export const ShoppingCart = ({ isOpen, onClose, cartUpdated, onCartUpdate }) => 
                 await apiService.crearPedido(selectedDireccion, selectedMetodo);
                 setMensajeCheckout('¡Pedido realizado con éxito!');
                 setCartItems([]);
+                if (onCartUpdate) onCartUpdate();
                 setTimeout(() => {
                   setShowCheckout(false);
                   onClose();

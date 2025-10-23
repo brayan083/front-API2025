@@ -1,0 +1,271 @@
+.profile-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 2rem auto; /* Centrar en la página */
+}
+
+.profile-container h2 {
+    text-align: center;
+    color: #1e3a8a;
+    margin-top: 0;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 1rem;
+}
+
+.profile-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+.profile-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.profile-section h3 {
+    color: #374151;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    border-left: 4px solid #3b82f6;
+    padding-left: 0.75rem;
+}
+
+.profile-section p,
+.profile-section li {
+    color: #4b5563;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.profile-section ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 0.5rem;
+}
+
+.profile-section li {
+    background-color: #f9fafb;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.btn-add {
+    margin-top: 1rem;
+    padding: 0.6rem 1.2rem;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.btn-add:hover {
+    background-color: #e5e7eb;
+}
+
+.add-form {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.add-form h4 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #1e3a8a;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columnas */
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-grid-condensed {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Columnas flexibles */
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+
+.add-form input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+}
+
+.add-form input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.order-history-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+.order-summary-item {
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    transition: box-shadow 0.2s ease;
+}
+
+.order-summary-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.order-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed #d1d5db;
+}
+
+.order-id {
+    font-weight: 600;
+    color: #1e3a8a;
+    font-size: 1.1rem;
+}
+
+.order-date {
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.order-summary-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Columnas flexibles */
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    color: #4b5563;
+}
+
+.order-status,
+.order-items,
+.order-total {
+    display: inline-block; /* O flex si necesitas más control */
+}
+
+.order-total {
+    font-weight: 600;
+    color: #10b981; /* Verde para el total */
+    text-align: right; /* Alinear total a la derecha si es posible */
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem; /* Espacio debajo del header de sección */
+    flex-wrap: wrap; /* Permitir que el botón baje si no hay espacio */
+    gap: 0.5rem; /* Espacio entre título y botón */
+}
+
+.profile-section h3 {
+    color: #374151;
+    margin: 0; /* Quitar margen por defecto */
+    font-size: 1.25rem;
+    border-left: 4px solid #3b82f6;
+    padding-left: 0.75rem;
+    line-height: 1.3; /* Mejor alineación vertical con el botón */
+}
+
+.profile-section p,
+.profile-section li {
+    color: #4b5563; line-height: 1.6; margin-bottom: 0.5rem;
+}
+.profile-section ul { list-style: none; padding-left: 0; margin-top: 0.5rem; }
+.profile-section li { background-color: #f9fafb; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #e5e7eb; }
+
+/* --- NUEVO: Botón Editar --- */
+.btn-edit {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    background-color: transparent;
+    border: 1px solid #d1d5db;
+    color: #4b5563;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap; /* Evitar que el texto del botón se parta */
+}
+.btn-edit:hover {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.btn-add {
+    margin-top: 1rem; padding: 0.6rem 1.2rem; background-color: #f3f4f6; border: 1px solid #d1d5db; color: #374151; border-radius: 6px; cursor: pointer; font-weight: 500; transition: background-color 0.2s ease;
+}
+.btn-add:hover { background-color: #e5e7eb; }
+
+.add-form, .edit-form { /* Estilos comunes para ambos formularios */
+    margin-top: 1.5rem; padding: 1.5rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px;
+}
+.add-form h4, .edit-form h4 { margin-top: 0; margin-bottom: 1rem; color: #1e3a8a; }
+
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem; }
+.form-grid-condensed { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+
+/* Inputs para todos los formularios dentro de UserProfile */
+.add-form input, .edit-form input {
+    width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; background-color: white; /* Asegurar fondo blanco */
+}
+.add-form input:focus, .edit-form input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+
+/* Botones primarios dentro de los formularios */
+.add-form .btn-primary, .edit-form .btn-primary {
+    margin-top: 1rem; width: auto; /* No ocupar todo el ancho */ padding: 0.75rem 1.5rem;
+}
+
+/* Ajuste responsivo para el cuerpo del resumen */
+@media (max-width: 600px) {
+    .order-summary-body {
+        grid-template-columns: 1fr; /* Una columna en móviles */
+        gap: 0.25rem;
+    }
+    .order-total {
+        text-align: left; /* Alinear a la izquierda en móvil */
+        margin-top: 0.5rem;
+    }
+}
+
+.add-form .btn-primary {
+    /* Usar el estilo definido en App.css */
+    margin-top: 1rem;
+    width: auto; /* No ocupar todo el ancho por defecto */
+    padding: 0.75rem 1.5rem;
+}
+
+/* Responsividad */
+@media (max-width: 600px) {
+    .profile-container {
+        padding: 1.5rem;
+    }
+    .form-grid {
+        grid-template-columns: 1fr; /* 1 columna en móviles */
+    }
+}

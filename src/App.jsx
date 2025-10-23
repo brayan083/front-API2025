@@ -9,6 +9,7 @@ import { ShoppingCart } from "./components/ShoppingCart";
 import { apiService } from "./lib/api";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import "./App.css";
+import { UserProfile } from "./components/UserProfile";
 
 // Layout inteligente que cambia según autenticación
 function SmartLayout() {
@@ -119,6 +120,8 @@ function AppContent() {
       <Route element={<SmartLayout />}>
         <Route path="/" element={<Home />} />
         <Route path="/catalogo" element={<ProductCatalog />} />
+        <Route path="/user" element={<UserProfile />} />
+
         {/* Ruta /admin solo para admins */}
         <Route
           path="/admin"

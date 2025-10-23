@@ -18,6 +18,9 @@ export const Header = ({ onCartClick = () => {}, cartItemCount = 0 }) => {
           {/* Navegación siempre visible */}
           <Link to="/" className="nav-link">Inicio</Link>
           <Link to="/catalogo" className="nav-link">Catálogo</Link>
+          {user && (
+            <Link to="/user" className="nav-link">User</Link>
+          )}
           {user?.isAdmin && (
             <Link to="/admin" className="nav-link nav-admin">Admin</Link>
           )}

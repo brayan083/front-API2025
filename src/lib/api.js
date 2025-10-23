@@ -2,6 +2,21 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
 class ApiService {
+  // Obtener todos los pedidos (GET /api/pedidos)
+  getPedidos() {
+    return this.request('/api/pedidos', {
+      method: 'GET',
+    });
+  }
+  // Obtener historial de pedidos del usuario
+  getHistorialPedidos({ page = 0, size = 20 } = {}) {
+    const params = new URLSearchParams();
+    params.append('page', page);
+    params.append('size', size);
+    return this.request(`/api/pedidos/historial?${params.toString()}`, {
+      method: 'GET',
+    });
+  }
   // Obtener pedidos (admin)
   async getPedidosAdmin() {
     return this.request('/api/admin/pedidos', {
