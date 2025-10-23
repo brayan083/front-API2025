@@ -2,26 +2,105 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4002';
 
 class ApiService {
+    // Método interno para hacer la request actual
+    async _makeRequest(url, config, isPublic = false) {
+        let response;
+        try {
+            response = await fetch(url, config);
+
+            if (!response.ok) {
+                // Intentar obtener el cuerpo del error como JSON
+                const errorData = await response.json().catch(() => ({}));
+                let errorMessage;
+
+                // Mapeo de códigos de estado a mensajes más amigables
+                switch (response.status) {
+                    case 400: // Bad Request
+                        errorMessage = errorData.message || 'Datos inválidos. Por favor, verifica la información ingresada.';
+                        break;
+                    case 401: // Unauthorized
+                        errorMessage = errorData.message || 'Credenciales incorrectas o token inválido/expirado.';
+                        // Si el error es 401 y no es una petición pública, desloguear
+                        if (!isPublic) {
+                            this.logout();
+                            // Opcional: Recargar la página para forzar a la pantalla de login
+                            // window.location.reload();
+                        }
+                        break;
+                    case 403: // Forbidden
+                        errorMessage = errorData.message || 'Acceso denegado. No tienes permisos para esta acción.';
+                        break;
+                    case 404: // Not Found
+                        errorMessage = errorData.message || 'Recurso no encontrado en el servidor.';
+                        break;
+                    case 409: // Conflict
+                        errorMessage = errorData.message || 'Conflicto. El recurso ya existe o hay un problema de duplicidad.';
+                        break;
+                    case 500: // Internal Server Error
+                        errorMessage = errorData.message || 'Ocurrió un error interno inesperado en el servidor.';
+                        break;
+                    default:
+                        errorMessage = errorData.message || `Error ${response.status}: ${response.statusText}`;
+                }
+                // Lanzar el error formateado
+                throw new Error(`Error ${response.status}: ${errorMessage}`);
+            }
+
+            // Procesar respuesta exitosa
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                // Para respuestas sin cuerpo (ej: 204 No Content) o no JSON
+                const text = await response.text();
+                // Devolver un objeto indicando éxito si no hay texto, o el texto si lo hay
+                return text ? text : { success: true };
+            }
+
+        } catch (error) {
+            // Si ya es un error formateado por nosotros, re-lanzarlo
+            if (error.message.startsWith('Error ')) {
+                throw error;
+            }
+            // Si es un error de red (TypeError: Failed to fetch)
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+                console.error('Network Error:', error);
+                throw new Error(`Error de Red: No se pudo conectar al servidor en ${API_BASE_URL}. Verifica que el backend esté funcionando y accesible.`);
+            }
+
+            // Otros errores inesperados
+            console.error('API Request Error (catch general):', error);
+            // Re-lanzar el error original o uno nuevo genérico
+            throw error || new Error('Ocurrió un error inesperado al procesar la solicitud.');
+        }
+    }
+
+
+    // Método para requests que requieren autenticación
     request(endpoint, options = {}) {
         const url = `${API_BASE_URL}${endpoint}`;
+        const token = this.getStoredToken();
+
+        // No hacer la petición si no hay token (excepto para login/registro que usan publicRequest)
+        // if (!token && !isPublicEndpoint(endpoint)) {
+        //   console.warn(`Intento de request autenticada sin token a ${endpoint}`);
+        //   // Podrías devolver un error aquí o dejar que falle en el backend
+        //   // return Promise.reject(new Error('No autenticado'));
+        // }
+
         const config = {
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers,
+                ...(token ? { Authorization: `Bearer ${token}` } : {}), // Añadir token si existe
             },
             ...options,
         };
 
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        } else if (!url.includes('/api/auth/login') && !url.includes('/api/auth/registrar')) {
-            console.warn(`Attempting authenticated request to ${endpoint} without a token.`);
-        }
-
-        return this._makeRequest(url, config);
+        return this._makeRequest(url, config, false); // false indica que no es pública
     }
 
+    // Método para requests públicos (sin autenticación explícita)
     publicRequest(endpoint, options = {}) {
         const url = `${API_BASE_URL}${endpoint}`;
         const config = {
@@ -31,89 +110,46 @@ class ApiService {
             },
             ...options,
         };
-        return this._makeRequest(url, config);
+
+        return this._makeRequest(url, config, true);
     }
 
-    async _makeRequest(url, config) {
-        try {
-            const response = await fetch(url, config);
 
-            if (!response.ok) {
-                let errorData = {};
-                try {
-                    errorData = await response.json();
-                } catch (e) {
-                    errorData.message = response.statusText;
-                }
+    // --- AUTENTICACIÓN ---
 
-                let errorMessage = `Error ${response.status}: ${errorData.message || response.statusText}`;
-
-                if (response.status === 401) {
-                    if (url.includes('/api/auth/login')) {
-                        errorMessage = 'Email o contraseña incorrectos.';
-                    } else {
-                        errorMessage = errorData.message || 'No autorizado. Tu sesión puede haber expirado.';
-                    }
-                } else if (response.status === 403) {
-                    errorMessage = errorData.message || 'Acceso denegado. No tienes permisos.';
-                } else if (response.status === 400 && errorData.errors) {
-                    errorMessage = `Error de validación: ${errorData.errors.join(', ')}`;
-                } else if (response.status === 409 && errorData.message) {
-                    errorMessage = errorData.message;
-                }
-
-                throw new Error(errorMessage);
-            }
-
-            const contentType = response.headers.get('content-type');
-            if (response.status === 204 || !contentType) {
-                return { success: true };
-            }
-            if (contentType && contentType.includes('application/json')) {
-                return response.json();
-            } else {
-                return response.text().then(text => text || { success: true });
-            }
-
-        } catch (error) {
-            if (error instanceof TypeError && (error.message.includes('fetch') || error.message.includes('NetworkError'))) {
-                throw new Error(`No se pudo conectar al servidor en ${API_BASE_URL}. Verifica que el backend esté funcionando.`);
-            }
-            console.error('API Request Error:', error);
-            throw error;
-        }
-    }
-
-    // Métodos de Autenticación
     login(email, contrasena) {
+        // Login siempre es público
         return this.publicRequest('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify({ email, contrasena }),
         }).then(data => {
             if (data.token) {
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('userEmail', data.email);
+                // Guardar email también puede ser útil
+                if (email) localStorage.setItem('userEmail', email);
             }
-            return data;
+            return data; // Devuelve { usuarioId, email, token }
         });
     }
 
     register(nombre, apellido, email, contrasena) {
+        // Registro siempre es público
         return this.publicRequest('/api/auth/registrar', {
             method: 'POST',
             body: JSON.stringify({ nombre, apellido, email, contrasena }),
         }).then(data => {
+            // Si el registro devuelve token (auto-login)
             if (data.token) {
                 localStorage.setItem('token', data.token);
-                localStorage.setItem('userEmail', data.email);
+                if (email) localStorage.setItem('userEmail', email);
             }
-            return data;
+            return data; // Devuelve { usuarioId, email, token } o solo mensaje
         });
     }
 
     logout() {
         localStorage.removeItem('token');
-        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userEmail'); // Limpiar también el email
     }
 
     getStoredToken() {
@@ -124,29 +160,34 @@ class ApiService {
         return localStorage.getItem('userEmail');
     }
 
+    // Obtener perfil del usuario autenticado
     getCurrentUserProfile() {
         const token = this.getStoredToken();
         if (!token) {
-            return Promise.resolve(null);
+            return Promise.resolve(null); // No hay token, no hay usuario
         }
-
+        // Usar 'request' (autenticado)
         return this.request('/api/usuarios/perfil', {
             method: 'GET',
         })
             .then(profileData => {
-                return { ...profileData, token };
+                // Combinar datos del perfil con el token existente
+                return { ...profileData, token }; // Devuelve { id, email, nombre, apellido, token }
             })
             .catch(error => {
-                console.error("Error fetching user profile:", error);
-                this.logout();
+                console.error('Error fetching user profile:', error);
+                // Si falla (ej: token inválido/expirado), desloguear y devolver null
+                if (error.message.includes('401')) {
+                    this.logout();
+                }
                 return null;
             });
     }
 
-    // Métodos de Productos
+    // --- PRODUCTOS, CATEGORÍAS, MARCAS (Públicos) ---
+
     getProductos(filtros = {}) {
         const params = new URLSearchParams();
-
         if (filtros.q) params.append('q', String(filtros.q));
         if (filtros.categoria !== undefined && filtros.categoria !== null && filtros.categoria !== '') {
             params.append('categoria', String(filtros.categoria));
@@ -162,54 +203,62 @@ class ApiService {
 
         const queryString = params.toString();
         const endpoint = queryString ? `/api/productos?${queryString}` : '/api/productos';
-
-        return this.publicRequest(endpoint, {
-            method: 'GET',
-        });
+        return this.publicRequest(endpoint, { method: 'GET' });
     }
 
     getProducto(id) {
-        return this.publicRequest(`/api/productos/${id}`, {
-            method: 'GET',
-        });
+        return this.publicRequest(`/api/productos/${id}`, { method: 'GET' });
     }
 
     getCategorias() {
-        return this.publicRequest('/api/categorias', {
-            method: 'GET',
-        });
+        return this.publicRequest('/api/categorias', { method: 'GET' });
     }
 
     getMarcas() {
-        return this.publicRequest('/api/marcas', {
-            method: 'GET',
-        });
+        return this.publicRequest('/api/marcas', { method: 'GET' });
     }
 
-    // Métodos de Carrito
+    // --- CARRITO (Autenticado) ---
+
     getCarrito() {
-        return this.request('/api/carrito', {
-            method: 'GET',
-        });
+        return this.request('/api/carrito', { method: 'GET' });
     }
 
     agregarAlCarrito(idProducto, cantidad = 1) {
         return this.request('/api/carrito/items', {
             method: 'POST',
-            body: JSON.stringify({
-                id_producto: idProducto,
-                cantidad: cantidad
-            }),
+            body: JSON.stringify({ id_producto: idProducto, cantidad: cantidad }),
         });
     }
 
     eliminarDelCarrito(idProducto) {
-        return this.request(`/api/carrito/items/${idProducto}`, {
-            method: 'DELETE',
-        });
+        return this.request(`/api/carrito/items/${idProducto}`, { method: 'DELETE' });
     }
 
-    // Métodos de Pedidos
+    // --- MÉTODOS PARA CHECKOUT (Autenticado) ---
+
+    /**
+     * Obtiene las direcciones de envío del usuario logueado.
+     * @returns {Promise<Array<object>>} Una promesa que resuelve a un array de direcciones.
+     */
+    getDirecciones() {
+        return this.request('/api/usuarios/direcciones', { method: 'GET' });
+    }
+
+    /**
+     * Obtiene los métodos de pago del usuario logueado.
+     * @returns {Promise<Array<object>>} Una promesa que resuelve a un array de métodos de pago.
+     */
+    getMetodosPago() {
+        return this.request('/api/usuarios/metodos-pago', { method: 'GET' });
+    }
+
+    /**
+     * Crea un nuevo pedido utilizando una dirección y método de pago específicos.
+     * @param {number} idDireccionEnvio - El ID de la dirección de envío a usar.
+     * @param {number} idMetodoPago - El ID del método de pago a usar.
+     * @returns {Promise<object>} Una promesa que resuelve al objeto del pedido creado.
+     */
     crearPedido(idDireccionEnvio, idMetodoPago) {
         return this.request('/api/pedidos', {
             method: 'POST',
@@ -217,63 +266,6 @@ class ApiService {
                 id_direccion_envio: idDireccionEnvio,
                 id_metodo_pago: idMetodoPago
             }),
-        });
-    }
-
-    getHistorialPedidos(pageable = { page: 0, size: 10, sort: 'fecha,desc' }) {
-        const params = new URLSearchParams();
-        params.append('page', pageable.page);
-        params.append('size', pageable.size);
-        params.append('sort', pageable.sort);
-        return this.request(`/api/pedidos?${params.toString()}`, {
-            method: 'GET',
-        });
-    }
-
-    getDetallePedido(pedidoId) {
-        return this.request(`/api/pedidos/${pedidoId}`, {
-            method: 'GET',
-        });
-    }
-
-    // Métodos de Perfil de Usuario
-    updateProfile(profileData) {
-        return this.request('/api/usuarios/perfil', {
-            method: 'PUT',
-            body: JSON.stringify(profileData),
-        });
-    }
-
-    changePassword(contrasenaActual, contrasenaNueva) {
-        return this.request('/api/usuarios/perfil/cambiar-contrasena', {
-            method: 'PUT',
-            body: JSON.stringify({ contrasenaActual, contrasenaNueva }),
-        });
-    }
-
-    getDirecciones() {
-        return this.request('/api/usuarios/direcciones', {
-            method: 'GET',
-        });
-    }
-
-    addDireccion(direccionData) {
-        return this.request('/api/usuarios/direcciones', {
-            method: 'POST',
-            body: JSON.stringify(direccionData),
-        });
-    }
-
-    getMetodosPago() {
-        return this.request('/api/usuarios/metodos-pago', {
-            method: 'GET',
-        });
-    }
-
-    addMetodoPago(metodoPagoData) {
-        return this.request('/api/usuarios/metodos-pago', {
-            method: 'POST',
-            body: JSON.stringify(metodoPagoData),
         });
     }
 }
